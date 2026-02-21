@@ -7,13 +7,35 @@
 
 set -euo pipefail
 
-DOMAIN="${LOCAL_ALIAS_HOST:-local.1day1streak.com}"
-PROTOCOL="${LOCAL_ALIAS_PROTOCOL:-https}"
+if [ -f .env.local ]; then
+  echo ".env.local is not supported in this project."
+  echo "Use .env only and move values from .env.local to .env."
+  exit 1
+fi
 
-export LOCAL_ALIAS_HOST="$DOMAIN"
-export LOCAL_ALIAS_PROTOCOL="$PROTOCOL"
-export LOCAL_SSL_KEY_PATH="${LOCAL_SSL_KEY_PATH:-_wildcard.1day1streak.com-key.pem}"
-export LOCAL_SSL_CERT_PATH="${LOCAL_SSL_CERT_PATH:-_wildcard.1day1streak.com.pem}"
+# Load `.env` once so shell scripts also use the same env source as Next.js.
+if [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
+
+# Local alias settings are intentionally hardcoded here (not managed by .env).
+LOCAL_ALIAS_HOST_FIXED="local.1day1streak.com"
+LOCAL_ALIAS_PROTOCOL_FIXED="https"
+LOCAL_ALIAS_PORT_FIXED="443"
+LOCAL_SSL_KEY_PATH_FIXED="_wildcard.1day1streak.com-key.pem"
+LOCAL_SSL_CERT_PATH_FIXED="_wildcard.1day1streak.com.pem"
+
+export LOCAL_ALIAS_HOST="$LOCAL_ALIAS_HOST_FIXED"
+export LOCAL_ALIAS_PROTOCOL="$LOCAL_ALIAS_PROTOCOL_FIXED"
+export LOCAL_ALIAS_PORT="$LOCAL_ALIAS_PORT_FIXED"
+export LOCAL_SSL_KEY_PATH="$LOCAL_SSL_KEY_PATH_FIXED"
+export LOCAL_SSL_CERT_PATH="$LOCAL_SSL_CERT_PATH_FIXED"
+
+DOMAIN="$LOCAL_ALIAS_HOST_FIXED"
+PROTOCOL="$LOCAL_ALIAS_PROTOCOL_FIXED"
 
 bash ./scripts/init-local-dns.sh "$DOMAIN"
 
