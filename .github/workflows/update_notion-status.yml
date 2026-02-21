@@ -1,47 +1,48 @@
-name: Update Notion on Branch Create
+name: Branch Automation (Notion Status)
 
 on:
-  create: # 브랜치나 태그 생성 시 발동
+  create:
 
 jobs:
-  update-notion:
-    if: github.event.ref_type == 'branch' # 브랜치일 때만 실행
+  update-notion-on-branch:
+    # 브랜치 생성일 때만 실행 (태그 제외)
+    if: github.event.ref_type == 'branch'
     runs-on: ubuntu-latest
     steps:
-      - name: Extract Ticket ID and Update Notion
+      - name: Update Notion Status to 진행중
         uses: actions/github-script@v6
         env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-          BRANCH_NAME: ${{ github.ref_name }}
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: '2f841807241280379e84f43daa636edb'
         with:
           script: |
             const https = require('https');
-            
-            // 1. 브랜치 이름에서 숫자 ID 추출 (예: feature/1D1S-123-login -> 123)
-            // 프로젝트 키(1D1S, LAITEU 등)에 맞춰 정규식 조정 필요
-            const branchName = process.env.BRANCH_NAME;
-            const match = branchName.match(/([A-Za-z0-9]+)-(\d+)/);
-            
+
+            const branchName = context.ref; // create 이벤트는 context.ref에 브랜치명
+            console.log(`Branch created: ${branchName}`);
+
+            const regex = /ODS-(\d+)/i;
+            const match = branchName.match(regex);
+
             if (!match) {
-              console.log(`No ticket ID found in branch name: ${branchName}`);
+              console.log("No Notion ID found in branch name. Skipping.");
               return;
             }
-            
-            const prefix = match[1]; // 예: 1D1S
-            const numberId = parseInt(match[2], 10); // 예: 123
-            
-            console.log(`Detected Ticket: ${prefix}-${numberId}`);
 
-            // Notion API 호출 함수
+            const issueId = parseInt(match[1], 10);
+            console.log(`Processing ODS-${issueId}`);
+
+            const NOTION_API_KEY = process.env.NOTION_API_KEY;
+            const DATABASE_ID = process.env.NOTION_DATABASE_ID;
+
             function notionRequest(method, path, body) {
               return new Promise((resolve, reject) => {
                 const req = https.request({
                   hostname: 'api.notion.com',
-                  path: '/v1/pages' + path, // 검색은 /v1/databases/.../query
-                  method: method,
+                  path: '/v1' + path,
+                  method,
                   headers: {
-                    'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
+                    'Authorization': `Bearer ${NOTION_API_KEY}`,
                     'Notion-Version': '2022-06-28',
                     'Content-Type': 'application/json'
                   }
@@ -56,70 +57,24 @@ jobs:
               });
             }
 
-            // 2. Notion에서 해당 ID를 가진 페이지 검색
-            // (Unique ID 속성 이름이 'ID'라고 가정)
-            const queryBody = {
-              filter: {
-                property: "ID",
-                unique_id: {
-                  equals: numberId
-                }
+            async function main() {
+              const queryRes = await notionRequest('POST', `/databases/${DATABASE_ID}/query`, {
+                filter: { property: "ID", unique_id: { equals: issueId } }
+              });
+
+              if (!queryRes.results || queryRes.results.length === 0) {
+                console.log(`Page not found for ODS-${issueId}`);
+                return;
               }
-            };
-            
-            // fetch로 구현 (https 모듈 대신 fetch 사용 가능하면 더 깔끔하지만 node 환경 호환성 위해 https 유지하거나 아래처럼 작성)
-            // 여기서는 개념적으로 작성합니다. 실제로는 https.request로 /v1/databases/{id}/query 호출
-            
-            const searchReq = https.request({
-                hostname: 'api.notion.com',
-                path: `/v1/databases/${process.env.NOTION_DATABASE_ID}/query`,
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
-                    'Notion-Version': '2022-06-28',
-                    'Content-Type': 'application/json'
+
+              const pageId = queryRes.results[0].id;
+
+              await notionRequest('PATCH', `/pages/${pageId}`, {
+                properties: {
+                  "상태": { status: { name: "진행중" } }
                 }
-            }, res => {
-                let data = '';
-                res.on('data', c => data += c);
-                res.on('end', async () => {
-                    const response = JSON.parse(data);
-                    if (response.results && response.results.length > 0) {
-                        const pageId = response.results[0].id;
-                        console.log(`Found Page ID: ${pageId}`);
-                        
-                        // 3. 페이지 상태 업데이트 (예: '진행 중'으로 변경)
-                        // '상태' 속성의 이름과 값은 실제 Notion DB에 맞춰 수정 필요
-                        const updateBody = {
-                            properties: {
-                                "상태": {
-                                    status: { name: "진행 중" } 
-                                },
-                                // 필요하다면 브랜치명도 저장 가능 (속성 미리 만들어둬야 함)
-                                // "Branch": { rich_text: [{ text: { content: branchName } }] }
-                            }
-                        };
-                        
-                        const updateReq = https.request({
-                            hostname: 'api.notion.com',
-                            path: `/v1/pages/${pageId}`,
-                            method: 'PATCH',
-                            headers: {
-                                'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
-                                'Notion-Version': '2022-06-28',
-                                'Content-Type': 'application/json'
-                            }
-                        }, upRes => {
-                            console.log(`Update Status: ${upRes.statusCode}`);
-                        });
-                        updateReq.write(JSON.stringify(updateBody));
-                        updateReq.end();
-                        
-                    } else {
-                        console.log("Page not found in Notion.");
-                    }
-                });
-            });
-            
-            searchReq.write(JSON.stringify(queryBody));
-            searchReq.end();
+              });
+              console.log(`Updated ODS-${issueId} status to 진행중`);
+            }
+
+            await main();
