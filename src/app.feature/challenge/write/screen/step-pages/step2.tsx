@@ -1,16 +1,24 @@
-import { ChallengeCreateFormValues } from '@feature/challenge/write/hooks/use-challenge-create-form';
 import {
   CheckContainer,
   DatePicker,
   Text,
   TextField,
 } from '@1d1s/design-system';
-import { FormControl, FormField, FormItem, FormMessage } from '@component/ui/form';
-import { cn } from '@module/lib/utils';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@component/ui/form';
+import { ChallengeCreateFormValues } from '@feature/challenge/write/hooks/use-challenge-create-form';
+import { cn } from '@module/utils/cn';
 import { CalendarDays, Infinity, Timer } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 
-const PERIOD_OPTIONS: Array<{ value: '7' | '14' | '30' | '60' | '365' | 'etc'; label: string }> = [
+const PERIOD_OPTIONS: Array<{
+  value: '7' | '14' | '30' | '60' | '365' | 'etc';
+  label: string;
+}> = [
   { value: '7', label: '7일' },
   { value: '14', label: '14일' },
   { value: '30', label: '30일' },
@@ -46,7 +54,7 @@ export function Step2(): React.ReactElement {
                   width="100%"
                   height={176}
                   className={cn(
-                    '!items-start !justify-start !rounded-3 p-6 text-left',
+                    '!rounded-3 !items-start !justify-start p-6 text-left',
                     field.value === 'ENDLESS'
                       ? '!border-main-800 !bg-main-200'
                       : '!border-gray-300 !bg-white'
@@ -58,10 +66,18 @@ export function Step2(): React.ReactElement {
                       <Infinity className="h-5 w-5" />
                     </span>
                     <div>
-                      <Text size="heading1" weight="bold" className="text-gray-900">
+                      <Text
+                        size="heading1"
+                        weight="bold"
+                        className="text-gray-900"
+                      >
                         무기한 챌린지
                       </Text>
-                      <Text size="body2" weight="regular" className="mt-2 text-gray-600">
+                      <Text
+                        size="body2"
+                        weight="regular"
+                        className="mt-2 text-gray-600"
+                      >
                         종료일 없이 루틴을 이어가는 장기 챌린지입니다.
                       </Text>
                     </div>
@@ -78,7 +94,7 @@ export function Step2(): React.ReactElement {
                   width="100%"
                   height={176}
                   className={cn(
-                    '!items-start !justify-start !rounded-3 p-6 text-left',
+                    '!rounded-3 !items-start !justify-start p-6 text-left',
                     field.value === 'LIMITED'
                       ? '!border-main-800 !bg-main-200'
                       : '!border-gray-300 !bg-white'
@@ -90,10 +106,18 @@ export function Step2(): React.ReactElement {
                       <Timer className="h-5 w-5" />
                     </span>
                     <div>
-                      <Text size="heading1" weight="bold" className="text-gray-900">
+                      <Text
+                        size="heading1"
+                        weight="bold"
+                        className="text-gray-900"
+                      >
                         기간 챌린지
                       </Text>
-                      <Text size="body2" weight="regular" className="mt-2 text-gray-600">
+                      <Text
+                        size="body2"
+                        weight="regular"
+                        className="mt-2 text-gray-600"
+                      >
                         시작일과 종료일을 정해 집중적으로 진행합니다.
                       </Text>
                     </div>
@@ -143,7 +167,9 @@ export function Step2(): React.ReactElement {
                           <Text
                             size="body1"
                             weight="medium"
-                            className={isSelected ? 'text-white' : 'text-gray-700'}
+                            className={
+                              isSelected ? 'text-white' : 'text-gray-700'
+                            }
                           >
                             {option.label}
                           </Text>

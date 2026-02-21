@@ -24,6 +24,44 @@ pnpm run codegen
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Local Alias (CORS)
+
+If backend CORS requires a fixed local origin, run the app with a local alias
+domain and HTTPS.
+
+`pnpm dev` now bootstraps everything automatically:
+
+1. add host entry to `/etc/hosts` (`local.1day1streak.com`)
+2. create local HTTPS cert with `mkcert`
+3. start server at `https://local.1day1streak.com`
+4. open browser automatically
+
+Prerequisite: `mkcert` must be installed on your machine.
+
+```bash
+pnpm dev
+```
+
+You can copy defaults from `.env.localalias.example`.
+
+Manual shortcuts:
+
+```bash
+pnpm run init:local-dns -- local.1day1streak.com
+pnpm run init-local-cert -- local.1day1streak.com
+```
+
+Configurable env vars:
+
+- `LOCAL_ALIAS_HOST` (default: `local.1day1streak.com`)
+- `LOCAL_ALIAS_PROTOCOL` (default: `https`)
+- `LOCAL_ALIAS_PORT` (default: `443` for https, `3000` for http)
+- `LOCAL_SSL_KEY_PATH` (default: `_wildcard.1day1streak.com-key.pem`)
+- `LOCAL_SSL_CERT_PATH` (default: `_wildcard.1day1streak.com.pem`)
+- `LOCAL_ALLOW_INSECURE_TLS=true` (optional, allow insecure backend TLS in dev)
+- `LOCAL_BIND_HOST` (optional)
+- `LOCAL_ALIAS_OPEN_BROWSER=false` (optional, disable auto-open)
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

@@ -1,16 +1,17 @@
+import { Button, Text } from '@1d1s/design-system';
 import { ChallengeCreateDialog } from '@feature/challenge/write/components/challenge-create-dialog';
 import { ChallengeCreateSuccessDialog } from '@feature/challenge/write/components/challenge-create-success-dialog';
 import { ChallengeCreateFormValues } from '@feature/challenge/write/hooks/use-challenge-create-form';
-import { Button, Text } from '@1d1s/design-system';
+import { useStepValidation } from '@feature/challenge/write/hooks/use-step-validation';
+import { useState } from 'react';
+import { useFormContext } from 'react-hook-form';
+
 import { Step1 } from './step-pages/step1';
 import { Step2 } from './step-pages/step2';
 import { Step3 } from './step-pages/step3';
 import { Step4 } from './step-pages/step4';
-import { useState } from 'react';
-import { useFormContext } from 'react-hook-form';
-import { useStepValidation } from '@feature/challenge/write/hooks/use-step-validation';
 
-export function ChallengeCreateForm({
+export function ChallengeCreateFormScreen({
   step,
   totalSteps,
   nextStep,
@@ -64,10 +65,7 @@ export function ChallengeCreateForm({
   };
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="mt-8 w-full"
-    >
+    <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 w-full">
       <section className="rounded-4 border border-gray-200 bg-white p-8 md:p-10">
         <div className="text-center">
           <Text size="display2" weight="bold" className="text-gray-900">
@@ -84,7 +82,13 @@ export function ChallengeCreateForm({
           {step === 1 ? (
             <div />
           ) : (
-            <Button variant="ghost" size="small" type="button" onClick={previousStep} className="px-4">
+            <Button
+              variant="ghost"
+              size="small"
+              type="button"
+              onClick={previousStep}
+              className="px-4"
+            >
               이전 단계
             </Button>
           )}
@@ -109,7 +113,10 @@ export function ChallengeCreateForm({
           )}
         </div>
       </section>
-      <ChallengeCreateSuccessDialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen} />
+      <ChallengeCreateSuccessDialog
+        open={isSuccessOpen}
+        onOpenChange={setIsSuccessOpen}
+      />
     </form>
   );
 }
